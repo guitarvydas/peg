@@ -95,32 +95,35 @@ EndOfFile <- !.
                   DOT))
 (defrule Identifier (and IdentStart (* IdentCont) Spacing))
 (defrule IdentStart (character-ranges (#\a #\z) (#\A #\Z) #\_))
-IdentCont <- IdentStart / '-' / [0-9]
-Literal <- ['] (!['] Char)* ['] Spacing
-         / ["] (!["] Char)* ["] Spacing
-Class <- '[' (!']' Range)* ']' Spacing
-Range <- Char '-' Char / Char
-Char <- '\\' [nrt'"\[\]\\]
-      / '\\' [0-2][0-7][0-7]
-      / '\\' [0-7][0-7]?
-      / !'\\' .
-LEFTARROW <- '<-' Spacing
-SLASH     <- '/' Spacing
-AND       <- '&' Spacing
-NOT       <- '!' Spacing
-QUESTION  <- '?' Spacing
-STAR      <- '*' Spacing
-PLUS      <- '+' Spacing
-OPENPAREN <- '(' Spacing
-CLOSEPAREN <- ')' Spacing
-OPENBRACE  <- '{' Spacing
-CLOSEBRACE <- '}' Spacing
-DOT       <- '.' Spacing
+(defrule IdentCont (or IdentStart #\- (character-ranges (#\0 #\9))))
+(defrule Literal (or (and #\' (* (and (! #\') Char)) #\' Spacing)
+                     (and #\" (* (and (! #\") Char)) #\" Spacing)))
+(defrule Class (and #\[ (* (and (! #\]) Range)) #\] Spacing))
+(defrule Range (or (and Char #\- Char) Char))
+(defrule Char (or (and #\\ (or #\n #\r #\t #\' #\" #\[ #\] #\\))
+                  (and #\\ (and (character-ranges #\0 #\2)
+                                (character-ranges #\0 #\7)
+                                (character-ranges #\0 #\7)))
+                  (and #\\ (character-ranges #\0 #\7) (? (character-ranges #\0 #\7)))
+                  (and (! #\\) (character-ranges (char 0) (char 255)))))
+(defrule LEFTARROW (and "<-" Spacing))
+(defrule SLASH (and #\/ Spacing))
+(defrule AND (and #\& Spacing))
+(defrule NOT (and #\! Spacing))
+(defrule QUESTION (and #\? Spacing))
+(defrule STAR (and #\* Spacing))
+(defrule PLUS (and #\+ Spacing))
+(defrule OPENPAREN (and #\( Spacing))
+(defrule CLOSEPAREN (and #\) Spacing))
+(defrule OPENBRACE (and #\{ Spacing))
+(defrule CLOSEBRACE (and #\} Spacing))
+(defrule DOT (#\. Spacing))
 
 
-Spacing <- (Space / Comment)*
-Comment <- '#' (!EndOfLine .)* (EndOfLine / EndOfFile)
-Space   <- ' ' / '\t' / EndOfLine
-EndOfLine <- '\r\n' / '\n' / '\r'
-EndOfFile <- !.
+(defrule Spacing (* (or Space Comment)))
+(defrule Comment (and #\# (* (and (! EndOfLine) (character-ranges (char 0) (char 255))))
+                      (or EndOfLine  EndOfFile)))
+(defrule Space (or #\Space #\Tab EndOfLine))
+(defrule EndOfLine (or (and #\Return #\Newline) #\Newline #\Return))
+(defrule EndOfFile (! (character-ranges (char 0) (char 255))))
 
