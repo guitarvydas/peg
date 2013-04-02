@@ -1,0 +1,8 @@
+A couple of experiments using the PEG parser "esrap".
+
+Goals:
+
+1. See that PEG grammars can be used to create read macros.
+
+2. Can we program in a different syntax inside #{ ... } and have it converted to CL syntax?  E.G., can we write prolog code in prolog syntax and have it compile to CL?
+
