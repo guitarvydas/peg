@@ -76,54 +76,207 @@ EndOfLine <- '\r\n' / '\n' / '\r'
 EndOfFile <- !.
 |#
 
+; (progn (ql:quickload "esrap") (ql:quickload "cl-heredoc"))
+
 (defpackage :peg-grammar
-  (:use :cl :esrap))
+  (:use :cl :esrap :cl-heredoc))
 
 (in-package :peg-grammar)
 
-(defrule grammar (and spacing (+ definition) end-of-file))
-(defrule definition (and identifier LEFTARROW expression))
-(defrule Expression (and Sequence (* SLASH Sequence)))
-(defrule Sequence (* Prefix))
-(defrule Prefix ((? (or AND NOT) Suffix)))
+(defrule grammar (and spacing (+ definition) EndOfFile)
+  (:destructure (spc def eof)
+   (declare (ignore spc eof))
+  `(progn
+     (defpackage :rpeg-grammar
+       (:use :cl :esrap :cl-heredoc))
+     (in-package :rpeg-grammar)
+     ,@def)))
+
+(defrule definition (and identifier LEFTARROW expression)
+  (:destructure (id arr e)
+   (declare (ignore arr))
+   `(defrule ,(intern (string-upcase id)) ,e)))
+
+(defrule Expression (and Sequence (* SLASHSequence))
+  (:destructure (seq seqs)
+   (format t "expr seq=~A seqs=~A~%" seq seqs)
+   (if seqs
+       `(or ,seq ,@seqs)
+     seq)))
+
+(defrule SLASHSequence (and SLASH Sequence)
+  (:destructure (sl seq)
+   (declare (ignore sl))
+   seq))
+
+(defrule Sequence (* Prefix)
+  (:destructure (&rest pref)
+   (format t "seq pref=~A~%" pref)
+   (if pref
+       (if (and (consp pref) (> (length pref) 1))
+           `(and ,@pref)
+         (first pref))
+     (values))))
+       
+
+(defrule Prefix (and (? (or AND NOT)) Suffix)
+  (:destructure (pref suff)
+   (if pref
+       (list pref suff)
+     suff)))
+
 (defrule Suffix (and Primary (? (or QUESTION  STAR  PLUS)))
+  (:destructure (prim suff)
+   (if suff
+       (list suff prim)
+     prim)))
+
 (defrule Primary (or
-                  (and Identifier (! LEFTARROW))
-                  (and OPENPAREN Expression CLOSEPAREN)
+                  P1 ;(and Identifier (! LEFTARROW))
+                  P2 ;(and OPENPAREN Expression CLOSEPAREN)
                   Literal
                   Class
-                  DOT))
-(defrule Identifier (and IdentStart (* IdentCont) Spacing))
+                  DOT)
+  (:lambda (x) x))
+
+(defrule P1 (and Identifier (! LEFTARROW))
+  (:function first))
+
+(defrule P2 (and OPENPAREN Expression CLOSEPAREN)
+  (:function second))
+
+(defrule Identifier (and StringIdentifier)
+  (:lambda (x) (intern (string-upcase (first x)))))
+
+(defrule StringIdentifier (and IdentStart (* IdentCont) Spacing)
+  (:text t))
+
 (defrule IdentStart (character-ranges (#\a #\z) (#\A #\Z) #\_))
 (defrule IdentCont (or IdentStart #\- (character-ranges (#\0 #\9))))
-(defrule Literal (or (and #\' (* (and (! #\') Char)) #\' Spacing)
-                     (and #\" (* (and (! #\") Char)) #\" Spacing)))
-(defrule Class (and #\[ (* (and (! #\]) Range)) #\] Spacing))
-(defrule Range (or (and Char #\- Char) Char))
-(defrule Char (or (and #\\ (or #\n #\r #\t #\' #\" #\[ #\] #\\))
-                  (and #\\ (and (character-ranges #\0 #\2)
-                                (character-ranges #\0 #\7)
-                                (character-ranges #\0 #\7)))
-                  (and #\\ (character-ranges #\0 #\7) (? (character-ranges #\0 #\7)))
-                  (and (! #\\) (character-ranges (char 0) (char 255)))))
-(defrule LEFTARROW (and "<-" Spacing))
-(defrule SLASH (and #\/ Spacing))
-(defrule AND (and #\& Spacing))
-(defrule NOT (and #\! Spacing))
-(defrule QUESTION (and #\? Spacing))
-(defrule STAR (and #\* Spacing))
-(defrule PLUS (and #\+ Spacing))
-(defrule OPENPAREN (and #\( Spacing))
-(defrule CLOSEPAREN (and #\) Spacing))
-(defrule OPENBRACE (and #\{ Spacing))
-(defrule CLOSEBRACE (and #\} Spacing))
-(defrule DOT (#\. Spacing))
+
+(defrule Literal (or (and #\' (* NotSingle) #\' Spacing)
+                     (and #\" (* NotDouble) #\" Spacing))
+  (:destructure (q1 string q1 spc)
+   (declare (ignore q1 q2 spc))
+   (format t "literal ~A r=~A ~A~%" string (text string) (type-of (text string)))
+   (text string)))
+
+(defrule NotSingle (and (! #\') Char)
+  (:function second))
+
+(defrule NotDouble (and (! #\") Char)
+  (:function second))
+
+(defrule NotRB (and (! #\]) Range)
+  (:function second))
+
+(defrule Class (and #\[ (* NotRB) #\] Spacing)
+  (:destructure (lb range rb spc)
+   (declare (ignore lb rb spc))
+   (if (and (consp range)
+            (or (not (= 2 (length range)))
+                (or (consp (first range))
+                    (consp (second range)))))
+       `(character-ranges ,@range)
+     `(character-ranges ,range))))
+
+(defrule Range (or CharRange SingleChar))
+
+(defrule CharRange (and Char #\- Char)
+  (:destructure (c1 dash c2)
+   (declare (ignore dash))
+   (list c1 c2)))
+  
+(defrule SingleChar (and Char)
+  (:destructure (c)
+   c))
+
+(defrule Char (or EscChar NumChar1 NumChar2 AnyChar))
+
+(defrule EscChar (and #\\ (or #\n #\r #\t #\' #\" #\[ #\] #\\))
+  (:destructure (sl c)
+   (declare (ignore sl))
+   (format t "esc ~A type=~A~%" c (type-of c))
+   (case (char c 0)
+     (#\n #\newline)
+     (#\r #\return)
+     (#\t #\tab)
+     (otherwise (char c 0)))))
+
+(defrule NumChar1 (and #\\
+                       (character-ranges #\0 #\2)
+                       (character-ranges #\0 #\7)
+                       (character-ranges #\0 #\7))
+  (:destructure (sl n1 n2 n3)
+   (declare (ignore sl))
+   (code-char (parse-integer (concatenate 'string n1 n2 n3) :radix 8))))
+
+(defrule NumChar2 (and #\\ (character-ranges #\0 #\7) (? (character-ranges #\0 #\7)))
+  (:destructure (sl n1 n2)
+   (declare (ignore sl))
+   (code-char (parse-integer (concatenate 'string n1 n2) :radix 8))))
+
+(defrule AnyChar (and (! #\\) character)
+  (:destructure (sl c)
+   (declare (ignore sl))
+   c))
+
+(defrule LEFTARROW (and "<-" Spacing)
+  (:lambda (list) (declare (ignore list))
+    (values)))
+(defrule SLASH (and #\/ Spacing)
+  (:lambda (list) (declare (ignore list))
+    (values)))
+(defrule AND (and #\& Spacing)
+  (:lambda (list) (declare (ignore list))
+    'and))
+(defrule NOT (and #\! Spacing)
+  (:lambda (list) (declare (ignore list))
+    '!))
+(defrule QUESTION (and #\? Spacing)
+  (:lambda (list) (declare (ignore list))
+    '?))
+(defrule STAR (and #\* Spacing)
+  (:lambda (list) (declare (ignore list))
+    '*))
+(defrule PLUS (and #\+ Spacing)
+  (:lambda (list) (declare (ignore list))
+    '+))
+(defrule OPENPAREN (and #\( Spacing)
+  (:lambda (list) (declare (ignore list))
+    (values)))
+(defrule CLOSEPAREN (and #\) Spacing)
+  (:lambda (list) (declare (ignore list))
+    (values)))
+(defrule OPENBRACE (and #\{ Spacing)
+  (:lambda (list) (declare (ignore list))
+    (values)))
+(defrule CLOSEBRACE (and #\} Spacing)
+  (:lambda (list) (declare (ignore list))
+    (values)))
+(defrule DOT (and #\. Spacing)
+  (:lambda (list) (declare (ignore list))
+    'character))
 
 
-(defrule Spacing (* (or Space Comment)))
-(defrule Comment (and #\# (* (and (! EndOfLine) (character-ranges (char 0) (char 255))))
-                      (or EndOfLine  EndOfFile)))
-(defrule Space (or #\Space #\Tab EndOfLine))
-(defrule EndOfLine (or (and #\Return #\Newline) #\Newline #\Return))
-(defrule EndOfFile (! (character-ranges (char 0) (char 255))))
+(defrule Spacing (* (or Space Comment))
+    (:lambda (list) (declare (ignore list))
+      (values)))
+
+(defrule Comment (and #\# (* (and (! EndOfLine) character ))
+                      (or EndOfLine  EndOfFile))
+    (:lambda (list) (declare (ignore list))
+      (values)))
+
+(defrule Space (or #\Space #\Tab EndOfLine)
+    (:lambda (list) (declare (ignore list))
+      (values)))
+
+(defrule EndOfLine (or (and #\Return #\Newline) #\Newline #\Return)
+    (:lambda (list) (declare (ignore list))
+      (values)))
+
+(defrule EndOfFile (! character)
+    (:lambda (list) (declare (ignore list))
+      (values)))
 
