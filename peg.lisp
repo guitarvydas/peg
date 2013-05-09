@@ -99,7 +99,7 @@ EndOfFile <- !.
 
 (defrule Expression (and Sequence (* SLASHSequence))
   (:destructure (seq seqs)
-   (format t "expr seq=~A seqs=~A~%" seq seqs)
+   ;(format t "expr seq=~A seqs=~A~%" seq seqs)
    (if seqs
        `(or ,seq ,@seqs)
      seq)))
@@ -111,7 +111,7 @@ EndOfFile <- !.
 
 (defrule Sequence (* Prefix)
   (:destructure (&rest pref)
-   (format t "seq pref=~A~%" pref)
+   ;(format t "seq pref=~A~%" pref)
    (if pref
        (if (and (consp pref) (> (length pref) 1))
            `(and ,@pref)
@@ -158,7 +158,7 @@ EndOfFile <- !.
                      (and #\" (* NotDouble) #\" Spacing))
   (:destructure (q1 string q1 spc)
    (declare (ignore q1 q2 spc))
-   (format t "literal ~A r=~A ~A~%" string (text string) (type-of (text string)))
+   ;(format t "literal ~A r=~A ~A~%" string (text string) (type-of (text string)))
    (text string)))
 
 (defrule NotSingle (and (! #\') Char)
@@ -196,7 +196,7 @@ EndOfFile <- !.
 (defrule EscChar (and #\\ (or #\n #\r #\t #\' #\" #\[ #\] #\\))
   (:destructure (sl c)
    (declare (ignore sl))
-   (format t "esc ~A type=~A~%" c (type-of c))
+   ;(format t "esc ~A type=~A~%" c (type-of c))
    (case (char c 0)
      (#\n #\newline)
      (#\r #\return)

@@ -151,10 +151,10 @@ Literal <- [']
 %peg
 )))
 
-(defun test106 ()
+(defun test107 ()
   (pprint (parse 'grammar
 #>%peg>
-
+EChar <- 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\'
 %peg
 )))
 

@@ -1,8 +1,8 @@
 (in-package :peg-grammar)
 
-; do this in listener (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
+; do this in the listener (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
 
-(defun test ()
+(defun pegself ()
   (pprint (parse 'grammar
 #>%peg>
 #;;; All rights reserved.
@@ -37,28 +37,36 @@
 
 Grammar <- Spacing Definition+ EndOfFile
 Definition <- Identifier LEFTARROW Expression
-SyntacticCode <- '<' (!'>' .)* '>' Spacing
 SemanticCode <- '{' (["] (!["] Char)* ["] / !'}' .)* '}' Spacing
-Expression <- Sequence (SLASH Sequence)*
+Expression <- Sequence (SLASHSequence)*
+SLASHSequence <- '/' Sequence
 Sequence <- Prefix*
 Prefix <- (AND / NOT)? Suffix
 Suffix <- Primary (QUESTION / STAR / PLUS)?
-Primary <- Identifier !LEFTARROW
-	 / OPENPAREN Expression CLOSEPAREN
+Primary <- P1
+	 / P2
 	 / Literal
 	 / Class
 	 / DOT
+P1 <- Identifier !LEFTARROW
+P2 <- OPENPAREN Expression CLOSEPAREN
 Identifier <- IdentStart IdentCont* Spacing
 IdentStart <- [a-zA-Z_]
 IdentCont <- IdentStart / '-' / [0-9]
-Literal <- ['] (!['] Char)* ['] Spacing
-         / ["] (!["] Char)* ["] Spacing
-Class <- '[' (!']' Range)* ']' Spacing
-Range <- Char '-' Char / Char
-Char <- '\\' [nrt'"\[\]\\]
-      / '\\' [0-2][0-7][0-7]
-      / '\\' [0-7][0-7]?
-      / !'\\' .
+Literal <- ['] NotSingle* ['] Spacing
+         / ["] NotDouble* Spacing
+NotSingle <- !['] Char
+NotDouble <- !["] Char
+Class <- '[' NotRB* ']' Spacing
+NotRB <- !']' Range
+Range <- CharRange / SingleChar
+CharRange <- Char '-' Char
+SingleChar <- Char
+Char <- EscChar / NumChar1 / NumChar2 / AnyChar
+EscChar <- '\\' ( 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\\' )
+NumChar1 <- '\\' [0-2][0-7][0-7]
+NumChar2 <- '\\' [0-7][0-7]?
+AnyChar <- !'\\' .
 LEFTARROW <- '<-' Spacing
 SLASH     <- '/' Spacing
 AND       <- '&' Spacing
@@ -74,6 +82,8 @@ DOT       <- '.' Spacing
 
 
 Spacing <- (Space / Comment)*
+  { (:lambda (list) (declare (ignore list))
+      (values)) }
 Comment <- '#' (!EndOfLine .)* (EndOfLine / EndOfFile)
 Space   <- ' ' / '\t' / EndOfLine
 EndOfLine <- '\r\n' / '\n' / '\r'

@@ -19,5 +19,5 @@ Currently, in this early stage, use the listener:
   (compile-file "peg.lisp")
   (load "peg")
   (compile-file "pegself.lisp")
-  (load "peg-sefl)
+  (load "pegself")
   (peg-grammar::pegself))
