@@ -6,3 +6,18 @@ Goals:
 
 2. Can we program in a different syntax inside #{ ... } and have it converted to CL syntax?  E.G., can we write prolog code in prolog syntax and have it compile to CL?
 
+
+How to load:
+
+Currently, in this early stage, use the listener:
+
+(progn 
+  (ql:quickload "esrap")
+  (ql:quickload "cl-heredoc")
+  (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
+  (ql:register-local-projects)
+  (compile-file "peg.lisp")
+  (load "peg")
+  (compile-file "pegself.lisp")
+  (load "peg-sefl)
+  (peg-grammar::pegself))

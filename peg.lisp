@@ -263,10 +263,14 @@ EndOfFile <- !.
     (:lambda (list) (declare (ignore list))
       (values)))
 
-(defrule Comment (and #\# (* (and (! EndOfLine) character ))
+(defrule Comment (and #\# (* (and (! EndOfLine) char1 ))
                       (or EndOfLine  EndOfFile))
-    (:lambda (list) (declare (ignore list))
+    (:lambda (list) (declare (ignorable list))
       (values)))
+
+(defrule char1 (and character)
+  (:lambda (c)
+    c))
 
 (defrule Space (or #\Space #\Tab EndOfLine)
     (:lambda (list) (declare (ignore list))
