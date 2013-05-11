@@ -92,14 +92,24 @@ EndOfFile <- !.
      (in-package :rpeg-grammar)
      ,@def)))
 
-(defrule definition (and identifier LEFTARROW expression)
-  (:destructure (id arr e)
-   (declare (ignore arr))
-   `(defrule ,(intern (string-upcase id)) ,e)))
+(defrule definition (and identifier LEFTARROW expression spacing (? semanticCode))
+  (:destructure (id arr e spc code)
+   (declare (ignore arr spc))
+   (if (null code)
+       `(defrule ,(intern (string-upcase id)) ,e)
+     `(defrule ,(intern (string-upcase id)) ,e ,code))))
+       
+(defrule semanticCode (and OPENBRACE (+ notbrace) CLOSEBRACE)
+  (:destructure (lb code rb)
+   (declare (ignore lb rb))
+   (read-from-string (text code))))
+
+(defrule notbrace (and (! #\}) character)
+  (:lambda (x)
+    x))
 
 (defrule Expression (and Sequence (* SLASHSequence))
   (:destructure (seq seqs)
-   ;(format t "expr seq=~A seqs=~A~%" seq seqs)
    (if seqs
        `(or ,seq ,@seqs)
      seq)))
@@ -111,7 +121,6 @@ EndOfFile <- !.
 
 (defrule Sequence (* Prefix)
   (:destructure (&rest pref)
-   ;(format t "seq pref=~A~%" pref)
    (if pref
        (if (and (consp pref) (> (length pref) 1))
            `(and ,@pref)
@@ -158,7 +167,6 @@ EndOfFile <- !.
                      (and #\" (* NotDouble) #\" Spacing))
   (:destructure (q1 string q1 spc)
    (declare (ignore q1 q2 spc))
-   ;(format t "literal ~A r=~A ~A~%" string (text string) (type-of (text string)))
    (text string)))
 
 (defrule NotSingle (and (! #\') Char)
