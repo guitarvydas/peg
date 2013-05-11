@@ -21,3 +21,13 @@ Currently, in this early stage, use the listener:
   (compile-file "pegself.lisp")
   (load "pegself")
   (peg-grammar::pegself))
+
+regression test (manual at the moment):
+
+> (in-package :peg-grammar)
+> (pegself)
+cut the result into regress.lisp and get rid of the surround progn
+compile regress.lisp
+compile pegself-regress.lisp
+> (rpegself)
+and compare the results with the contents of regress.lisp

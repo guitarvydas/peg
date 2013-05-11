@@ -35,23 +35,23 @@
 
 #;; the (PEG) grammar for a PEG parser
 
-Grammar <- Spacing Definition+ EndOfFile {
-  (:destructure (spc def eof)
-   (declare (ignore spc eof))
+Grammar <- Spacing Definition+ Spacing EndOfFile {
+  (:destructure (spc def spc2 eof)
+   (declare (ignore spc eof spc2))
    `(progn
       (defpackage :rpeg-grammar
         (:use :cl :esrap :cl-heredoc))
       (in-package :rpeg-grammar)
       ,@def)) }
 
-Definition <- Identifier LEFTARROW Expression {
+Definition <- Identifier LEFTARROW Expression spacing semanticCode? {
   (:destructure (id arr e spc code)
    (declare (ignore arr spc))
    (if (null code)
        `(defrule ,(intern (string-upcase id)) ,e)
      `(defrule ,(intern (string-upcase id)) ,e ,code))) }
 
-SemanticCode <- '{' notbrace+ '}' Spacing  {
+SemanticCode <- OPENBRACE notbrace+ CLOSEBRACE Spacing  {
   (:destructure (lb code rb)
    (declare (ignore lb rb))
    (read-from-string (text code))) }
@@ -60,17 +60,16 @@ notbrace <- ! '}' . {
   (:lambda (x)
     x) }
 
-Expression <- Sequence (SLASHSequence)*  {
+Expression <- Sequence SLASHSequence*  {
   (:destructure (seq seqs)
    (if seqs
        `(or ,seq ,@seqs)
      seq)) }
 
-SLASHSequence <- '/' Sequence  {
-  (:destructure (seq seqs)
-   (if seqs
-       `(or ,seq ,@seqs)
-     seq)) }
+SLASHSequence <- SLASH Sequence  {
+  (:destructure (sl seq)
+   (declare (ignore sl))
+   seq)) }
 
 Sequence <- Prefix*  {
   (:destructure (&rest pref)
@@ -95,7 +94,7 @@ Suffix <- Primary (QUESTION / STAR / PLUS)? {
 Primary <- P1
 	 / P2
 	 / Literal
-	 / Class
+	 / rClass
 	 / DOT  {
   (:lambda (x) x)) }
 
@@ -116,7 +115,7 @@ IdentStart <- [a-zA-Z_]
 IdentCont <- IdentStart / '-' / [0-9]
 
 Literal <- ['] NotSingle* ['] Spacing
-         / ["] NotDouble* Spacing  {
+         / ["] NotDouble* ["] Spacing  {
   (:destructure (q1 string q1 spc)
    (declare (ignore q1 q2 spc))
    (text string))) }
@@ -125,7 +124,7 @@ NotSingle <- !['] Char  { (:function second) }
 
 NotDouble <- !["] Char  { (:function second) }
 
-Class <- '[' NotRB* ']' Spacing {
+rClass <- '[' NotRB* ']' Spacing {
   (:destructure (lb range rb spc)
    (declare (ignore lb rb spc))
    (if (and (consp range)
@@ -144,14 +143,15 @@ CharRange <- Char '-' Char {
    (declare (ignore dash))
    (list c1 c2))) }
 
-SingleChar <- Char
+SingleChar <- Char {
+  (:destructure (c)
+    c) }
 
 Char <- EscChar / NumChar1 / NumChar2 / AnyChar
 
 EscChar <- '\\' ( 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\\' )  {
   (:destructure (sl c)
    (declare (ignore sl))
-   ;(format t "esc ~A type=~A~%" c (type-of c))
    (case (char c 0)
      (#\n #\newline)
      (#\r #\return)
@@ -222,32 +222,31 @@ DOT       <- '.' Spacing {
     'character) }
 
 
-Spacing <- (Space / Comment)* {
+Spacing <- (rSpace / Comment)* {
   (:lambda (list) (declare (ignore list))
       (values)) }
 
-Comment <- '#' (!EndOfLine .)* (EndOfLine / EndOfFile) {
+Comment <- '#' (!EndOfLine char1)* (EndOfLine / EndOfFile) {
   (:lambda (list) (declare (ignore list))
-    'character) }
+    (values)) }
 
-Space   <- ' ' / '\t' / EndOfLine {
+char1 <- . {
+  (:lambda (c)
+    c) }
+
+rSpace   <- ' ' / '\t' / EndOfLine {
   (:lambda (list) (declare (ignore list))
-    'character) }
+    (values)) }
 
 EndOfLine <- '\r\n' / '\n' / '\r' {
   (:lambda (list) (declare (ignore list))
-    'character) }
+    (values)) }
 
 EndOfFile <- !. {
   (:lambda (list) (declare (ignore list))
-    'character) }
+    (values)) }
 
 %peg
 )))
 
-
-(defun test200 ()
-  (pprint (parse 'grammar "Spacing <- (Space / Comment)*
-  {(:lambda (list) (declare (ignore list))
-      (values)) }")))
 

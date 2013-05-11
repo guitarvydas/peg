@@ -83,9 +83,9 @@ EndOfFile <- !.
 
 (in-package :peg-grammar)
 
-(defrule grammar (and spacing (+ definition) EndOfFile)
-  (:destructure (spc def eof)
-   (declare (ignore spc eof))
+(defrule grammar (and spacing (+ definition) spacing EndOfFile)
+  (:destructure (spc def spc2 eof)
+   (declare (ignore spc eof spc2))
   `(progn
      (defpackage :rpeg-grammar
        (:use :cl :esrap :cl-heredoc))
@@ -155,7 +155,7 @@ EndOfFile <- !.
   (:function second))
 
 (defrule Identifier (and StringIdentifier)
-  (:lambda (x) (intern (string-upcase (first x)))))
+  (:lambda (x) (intern (string-upcase x))))
 
 (defrule StringIdentifier (and IdentStart (* IdentCont) Spacing)
   (:text t))
