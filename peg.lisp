@@ -78,18 +78,18 @@ EndOfFile <- !.
 
 ; (progn (ql:quickload "esrap") (ql:quickload "cl-heredoc"))
 
-(defpackage :peg-grammar
+(defpackage :peg-grammar-bootstrap
   (:use :cl :esrap :cl-heredoc))
 
-(in-package :peg-grammar)
+(in-package :peg-grammar-bootstrap)
 
 (defrule grammar (and spacing (+ definition) spacing EndOfFile)
   (:destructure (spc def spc2 eof)
    (declare (ignore spc eof spc2))
   `(progn
-     (defpackage :rpeg-grammar
+     (defpackage :peg-grammar
        (:use :cl :esrap :cl-heredoc))
-     (in-package :rpeg-grammar)
+     (in-package :peg-grammar)
      ,@def)))
 
 (defrule definition (and identifier LEFTARROW expression spacing (? semanticCode))

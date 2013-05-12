@@ -1,4 +1,4 @@
-(in-package :peg-grammar)
+(in-package :peg-grammar-bootstrap)
 
 ; do this in the listener (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
 
@@ -39,9 +39,9 @@ Grammar <- Spacing Definition+ Spacing EndOfFile {
   (:destructure (spc def spc2 eof)
    (declare (ignore spc eof spc2))
    `(progn
-      (defpackage :rpeg-grammar
+      (defpackage :peg-grammar
         (:use :cl :esrap :cl-heredoc))
-      (in-package :rpeg-grammar)
+      (in-package :peg-grammar)
       ,@def)) }
 
 Definition <- Identifier LEFTARROW Expression spacing semanticCode? {
@@ -60,18 +60,18 @@ notbrace <- ! '}' . {
   (:lambda (x)
     x) }
 
-Expression <- Sequence SLASHSequence*  {
+Expression <- pSequence SLASHSequence*  {
   (:destructure (seq seqs)
    (if seqs
        `(or ,seq ,@seqs)
      seq)) }
 
-SLASHSequence <- SLASH Sequence  {
+SLASHSequence <- SLASH pSequence  {
   (:destructure (sl seq)
    (declare (ignore sl))
    seq)) }
 
-Sequence <- Prefix*  {
+pSequence <- Prefix*  {
   (:destructure (&rest pref)
    (if pref
        (if (and (consp pref) (> (length pref) 1))
@@ -79,7 +79,7 @@ Sequence <- Prefix*  {
          (first pref))
      (values)))) }
 
-Prefix <- (AND / NOT)? Suffix {
+Prefix <- (pAND / pNOT)? Suffix {
   (:destructure (pref suff)
    (if pref
        (list pref suff)
@@ -94,7 +94,7 @@ Suffix <- Primary (QUESTION / STAR / PLUS)? {
 Primary <- P1
 	 / P2
 	 / Literal
-	 / rClass
+	 / pClass
 	 / DOT  {
   (:lambda (x) x)) }
 
@@ -120,11 +120,11 @@ Literal <- ['] NotSingle* ['] Spacing
    (declare (ignore q1 q2 spc))
    (text string))) }
 
-NotSingle <- !['] Char  { (:function second) }
+NotSingle <- !['] pChar  { (:function second) }
 
-NotDouble <- !["] Char  { (:function second) }
+NotDouble <- !["] pChar  { (:function second) }
 
-rClass <- '[' NotRB* ']' Spacing {
+pClass <- '[' NotRB* ']' Spacing {
   (:destructure (lb range rb spc)
    (declare (ignore lb rb spc))
    (if (and (consp range)
@@ -138,16 +138,16 @@ NotRB <- !']' Range  { (:function second) }
 
 Range <- CharRange / SingleChar
 
-CharRange <- Char '-' Char {
+CharRange <- pChar '-' pChar {
   (:destructure (c1 dash c2)
    (declare (ignore dash))
    (list c1 c2))) }
 
-SingleChar <- Char {
+SingleChar <- pChar {
   (:lambda (c)
     c) }
 
-Char <- EscChar / NumChar1 / NumChar2 / AnyChar
+pChar <- EscChar / NumChar1 / NumChar2 / AnyChar
 
 EscChar <- '\\' ( 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\\' )  {
   (:destructure (sl c)
@@ -181,11 +181,11 @@ SLASH     <- '/' Spacing {
   (:lambda (list) (declare (ignore list))
     (values))) }
 
-AND       <- '&' Spacing {
+pAND       <- '&' Spacing {
   (:lambda (list) (declare (ignore list))
     'and) }
 
-NOT       <- '!' Spacing {
+pNOT       <- '!' Spacing {
   (:lambda (list) (declare (ignore list))
     '!) }
 
@@ -222,7 +222,7 @@ DOT       <- '.' Spacing {
     'character) }
 
 
-Spacing <- (rSpace / Comment)* {
+Spacing <- (pSpace / Comment)* {
   (:lambda (list) (declare (ignore list))
       (values)) }
 
@@ -234,7 +234,7 @@ char1 <- . {
   (:lambda (c)
     c) }
 
-rSpace   <- ' ' / '\t' / EndOfLine {
+pSpace   <- ' ' / '\t' / EndOfLine {
   (:lambda (list) (declare (ignore list))
     (values)) }
 
