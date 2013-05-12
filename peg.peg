@@ -29,6 +29,9 @@
 
 #;; the (PEG) grammar for a PEG parser
 
+
+# This was the original model.  See pegself.lisp for the active grammar, containing semantic actions.
+
 Grammar <- Spacing Definition+ EndOfFile
 Definition <- Identifier LEFTARROW Expression
 SyntacticCode <- '<' (!'>' .)* '>' Spacing

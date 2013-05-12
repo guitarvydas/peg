@@ -7,6 +7,30 @@ Goals:
 2. Can we program in a different syntax inside #{ ... } and have it converted to CL syntax?  E.G., can we write prolog code in prolog syntax and have it compile to CL?
 
 
+How to load it manually (in the interim):
+
+>  (ql:quickload "esrap")
+>  (ql:quickload "cl-heredoc")
+>  (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
+>  (ql:register-local-projects)
+>  (compile-file "peg.lisp")
+>  (load "peg")
+
+Examples:
+
+arith.lisp: esrap grammar for a simple 4-banger calculator-interpreter (waiting to be converted to a peg grammar)
+
+arith-mac.lisp: esrap grammar for a simple 4-banger calculator which returns the equivalent CL code.  If unquoted, CL will compile and execute the expression.  (waiting to be converted to a peg grammar)
+
+pegself.lisp: peg written in itself ; was used to generate peg.lisp.
+
+peg-bootstrap.lisp: peg written manually, for bootstrapping.
+
+
+
+-- Deprecated, how to load and build from scratch, using manually constructed peg parser --
+
+
 How to load:
 
 Currently, in this early stage, use the listener:
@@ -16,8 +40,8 @@ Currently, in this early stage, use the listener:
   (ql:quickload "cl-heredoc")
   (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
   (ql:register-local-projects)
-  (compile-file "peg.lisp")
-  (load "peg")
+  (compile-file "peg-bootstrap.lisp")
+  (load "peg-bootstrap")
   (compile-file "pegself.lisp")
   (load "pegself")
   (peg-grammar::pegself))
@@ -26,7 +50,7 @@ regression test (manual at the moment):
 
 > (in-package :peg-grammar)
 > (pegself)
-cut the result into regress.lisp and get rid of the surround progn
+cut the result into regress.lisp and get rid of the surrounding progn
 compile regress.lisp
 compile pegself-regress.lisp
 > (rpegself)
