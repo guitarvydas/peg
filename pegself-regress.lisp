@@ -1,9 +1,9 @@
-(in-package :peg-grammar)
+(in-package :rpeg-grammar)
 
 ; do this in the listener (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
 
-(defun pegself ()
-  (pprint (parse 'grammar
+(defun rpegself ()
+  (pprint (parse 'rpeg-grammar::grammar
 #>%peg>
 #;;; All rights reserved.
 
@@ -248,5 +248,3 @@ EndOfFile <- !. {
 
 %peg
 )))
-
-

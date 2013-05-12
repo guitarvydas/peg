@@ -154,7 +154,7 @@ EndOfFile <- !.
 (defrule P2 (and OPENPAREN Expression CLOSEPAREN)
   (:function second))
 
-(defrule Identifier (and StringIdentifier)
+(defrule Identifier StringIdentifier
   (:lambda (x) (intern (string-upcase x))))
 
 (defrule StringIdentifier (and IdentStart (* IdentCont) Spacing)
@@ -195,8 +195,8 @@ EndOfFile <- !.
    (declare (ignore dash))
    (list c1 c2)))
   
-(defrule SingleChar (and Char)
-  (:destructure (c)
+(defrule SingleChar Char
+  (:lambda (c)
    c))
 
 (defrule Char (or EscChar NumChar1 NumChar2 AnyChar))
@@ -276,7 +276,7 @@ EndOfFile <- !.
     (:lambda (list) (declare (ignorable list))
       (values)))
 
-(defrule char1 (and character)
+(defrule char1 character
   (:lambda (c)
     c))
 
