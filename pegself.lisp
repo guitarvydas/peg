@@ -149,7 +149,7 @@ SingleChar <- pChar {
 
 pChar <- EscChar / NumChar1 / NumChar2 / AnyChar
 
-EscChar <- '\\' ( 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\\' )  {
+EscChar <- '\\' ( 'n' / 'r' / 't' / '\'' / '\"' / '[' / ']' / '\\' )  {
   (:destructure (sl c)
    (declare (ignore sl))
    (case (char c 0)

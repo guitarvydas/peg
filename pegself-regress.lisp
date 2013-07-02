@@ -3,7 +3,7 @@
 ; do this in the listener (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
 
 (defun rpegself ()
-  (pprint (parse 'rpeg-grammar::grammar
+  (pprint (parse 'peg-grammar::grammar
 #>%peg>
 #;;; All rights reserved.
 
@@ -25,7 +25,7 @@
 #;;; MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 #;;; DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
 #;;; BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-#;;; EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#;;; EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUbT NOT LIMITED
 #;;; TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 #;;; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 #;;; ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
@@ -149,7 +149,7 @@ SingleChar <- pChar {
 
 pChar <- EscChar / NumChar1 / NumChar2 / AnyChar
 
-EscChar <- '\\' ( 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\\' )  {
+EscChar <- '\\' ( 'n' / 'r' / 't' / '\'' / '\"' / '[' / ']' / '\\' )  {
   (:destructure (sl c)
    (declare (ignore sl))
    (case (char c 0)

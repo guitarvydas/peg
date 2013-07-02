@@ -28,7 +28,7 @@ peg-bootstrap.lisp: peg written manually, for bootstrapping.
 
 
 
--- Deprecated, how to load and build from scratch, using manually constructed peg parser --
+-- How to load and build from scratch, using manually constructed peg parser --
 
 
 How to load:
@@ -43,15 +43,19 @@ Currently, in this early stage, use the listener:
   (compile-file "peg-bootstrap.lisp")
   (load "peg-bootstrap")
   (compile-file "pegself.lisp")
-  (load "pegself")
-  (peg-grammar::pegself))
+  (load "pegself"))
 
 regression test (manual at the moment):
 
-> (in-package :peg-grammar)
+> (in-package :peg-grammar-bootstrap)
 > (pegself)
 cut the result into regress.lisp and get rid of the surrounding progn
-compile regress.lisp
-compile pegself-regress.lisp
+> (in-package :peg-grammar)
+compile and load regress.lisp
+compile and load pegself-regress.lisp
 > (rpegself)
+cut the result into regress2.lisp and get rid of the surrounding progn
 and compare the results with the contents of regress.lisp
+
+if OK, copy regress.lisp into peg.lisp
+
