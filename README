@@ -9,10 +9,12 @@ Goals:
 
 How to load it manually (in the interim):
 
+>  (ql:quickload "alexandria")
 >  (ql:quickload "esrap")
 >  (ql:quickload "cl-heredoc")
 >  (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
 >  (ql:register-local-projects)
+>  (load "package")
 >  (compile-file "peg.lisp")
 >  (load "peg")
 
@@ -27,31 +29,17 @@ pegself.lisp: peg written in itself ; was used to generate peg.lisp.
 peg-bootstrap.lisp: peg written manually, for bootstrapping.
 
 
+To regenerate / regression test:
 
--- Deprecated, how to load and build from scratch, using manually constructed peg parser --
+(progn (compile-file "pegself.lisp")
+   (load "pegself")
+   (peg-grammar::pegself))
 
+(load "regression1")
+(peg-grammar::pegself-self)
 
-How to load:
+produces regression1.lisp and regression2.lisp
 
-Currently, in this early stage, use the listener:
+diff them, if no errors, 
 
-(progn 
-  (ql:quickload "esrap")
-  (ql:quickload "cl-heredoc")
-  (set-dispatch-macro-character #\# #\> #'cl-heredoc:read-heredoc)
-  (ql:register-local-projects)
-  (compile-file "peg-bootstrap.lisp")
-  (load "peg-bootstrap")
-  (compile-file "pegself.lisp")
-  (load "pegself")
-  (peg-grammar::pegself))
-
-regression test (manual at the moment):
-
-> (in-package :peg-grammar)
-> (pegself)
-cut the result into regress.lisp and get rid of the surrounding progn
-compile regress.lisp
-compile pegself-regress.lisp
-> (rpegself)
-and compare the results with the contents of regress.lisp
+(peg-grammar::overwrite-peg)
