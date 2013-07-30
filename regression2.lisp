@@ -31,7 +31,8 @@
    (DECLARE (IGNORE LB RB))
    (READ-FROM-STRING (TEXT CODE))))
 
-(ESRAP:DEFRULE NOTBRACE (AND (ESRAP:! "}") CHARACTER) (:LAMBDA (X) X))
+(ESRAP:DEFRULE NOTBRACE (OR UQLITERAL (AND (ESRAP:! "}") CHARACTER))
+  (:TEXT T))
 
 (ESRAP:DEFRULE EXPRESSION (AND PSEQUENCE (* SLASHSEQUENCE))
   (:DESTRUCTURE (SEQ SEQS) (IF SEQS `(OR ,SEQ ,@SEQS) SEQ)))
@@ -88,6 +89,16 @@
    (DECLARE (IGNORE Q1 Q2 SPC))
    (TEXT STRING)))
 
+(ESRAP:DEFRULE UQLITERAL
+               (AND (ESRAP:CHARACTER-RANGES #\")
+                    (* NOTDOUBLE)
+                    (ESRAP:CHARACTER-RANGES #\")
+                    SPACING)
+  (:DESTRUCTURE
+   (Q1 STRING Q2 SPC)
+   (DECLARE (IGNORE SPC))
+   `(,Q1 ,@STRING ,Q2)))
+
 (ESRAP:DEFRULE NOTSINGLE
                (AND (ESRAP:! (ESRAP:CHARACTER-RANGES #\')) PCHAR)
   (:FUNCTION SECOND))
@@ -126,7 +137,9 @@
                         "\""
                         "["
                         "]"
-                        "\\"))
+                        "\\"
+                        "{"
+                        "}"))
   (:DESTRUCTURE
    (SL C)
    (DECLARE (IGNORE SL))

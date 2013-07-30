@@ -47,11 +47,12 @@ Definition <- Identifier LEFTARROW Expression spacing semanticCode? {
 SemanticCode <- OPENBRACE notbrace+ CLOSEBRACE {
   (:destructure (lb code rb)
    (declare (ignore lb rb))
+   ;(format mp:*background-standard-output* "~S~%" code)
+   ;(format mp:*background-standard-output* "~S~%" (text code))
    (read-from-string (text code))) }
 
-notbrace <- ! '}' . {
-  (:lambda (x)
-    x) }
+notbrace <- UQLiteral / ( ! '}' . )  {
+  (:text t) }
 
 Expression <- pSequence SLASHSequence*  {
   (:destructure (seq seqs)
@@ -113,6 +114,11 @@ Literal <- ['] NotSingle* ['] Spacing
    (declare (ignore q1 q2 spc))
    (text string))) }
 
+UQLiteral <- ["] NotDouble* ["] Spacing  {
+  (:destructure (q1 string q2 spc)
+   (declare (ignore spc))
+   `(,q1 ,@string ,q2)) }
+
 NotSingle <- !['] pChar  { (:function second) }
 
 NotDouble <- !["] pChar  { (:function second) }
@@ -142,7 +148,7 @@ SingleChar <- pChar {
 
 pChar <- EscChar / NumChar1 / NumChar2 / AnyChar
 
-EscChar <- '\\' ( 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\\' )  {
+EscChar <- '\\' ( 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\\' / '{' / '}'  )  {
   (:destructure (sl c)
    (declare (ignore sl))
    (case (char c 0)

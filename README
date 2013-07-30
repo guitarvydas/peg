@@ -31,9 +31,9 @@ peg-bootstrap.lisp: peg written manually, for bootstrapping.
 
 To regenerate / regression test:
 
-(progn (compile-file "pegself.lisp")
-   (load "pegself")
-   (peg-grammar::pegself))
+(compile-file "pegself.lisp")
+(load "pegself")
+(peg-grammar::pegself)
 
 (load "regression1")
 (peg-grammar::pegself-self)
