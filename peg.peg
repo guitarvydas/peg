@@ -110,7 +110,7 @@ IdentCont <- IdentStart / '-' / [0-9]
 
 Literal <- ['] NotSingle* ['] Spacing
          / ["] NotDouble* ["] Spacing  {
-  (:destructure (q1 string q1 spc)
+  (:destructure (q1 string q2 spc)
    (declare (ignore q1 q2 spc))
    (text string))) }
 
@@ -149,13 +149,15 @@ SingleChar <- pChar {
 pChar <- EscChar / NumChar1 / NumChar2 / AnyChar
 
 EscChar <- '\\' ( 'n' / 'r' / 't' / ['] / '\"' / '[' / ']' / '\\' / '{' / '}'  )  {
-  (:destructure (sl c)
+  (:destructure (sl ch)
    (declare (ignore sl))
-   (case (char c 0)
-     (#\n #\newline)
-     (#\r #\return)
-     (#\t #\tab)
-     (otherwise (char c 0))))) }
+   (let ((c (or (and (characterp ch) ch)
+                (char ch 0))))
+     (case c
+       (#\n #\newline)
+       (#\r #\return)
+       (#\t #\tab)
+       (otherwise c)))) }
 
 NumChar1 <- '\\' [0-2][0-7][0-7]  {
   (:destructure (sl n1 n2 n3)

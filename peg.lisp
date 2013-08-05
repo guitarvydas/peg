@@ -85,7 +85,7 @@
                         (ESRAP:CHARACTER-RANGES #\")
                         SPACING))
   (:DESTRUCTURE
-   (Q1 STRING Q1 SPC)
+   (Q1 STRING Q2 SPC)
    (DECLARE (IGNORE Q1 Q2 SPC))
    (TEXT STRING)))
 
@@ -141,13 +141,14 @@
                         "{"
                         "}"))
   (:DESTRUCTURE
-   (SL C)
+   (SL CH)
    (DECLARE (IGNORE SL))
-   (CASE (CHAR C 0)
-     (#\n #\Newline)
-     (#\r #\Return)
-     (#\t #\Tab)
-     (OTHERWISE (CHAR C 0)))))
+   (LET ((C (OR (AND (CHARACTERP CH) CH) (CHAR CH 0))))
+     (CASE C
+       (#\n #\Newline)
+       (#\r #\Return)
+       (#\t #\Tab)
+       (OTHERWISE C)))))
 
 (ESRAP:DEFRULE NUMCHAR1
                (AND "\\"

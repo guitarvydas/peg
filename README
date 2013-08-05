@@ -35,6 +35,7 @@ To regenerate / regression test:
 (load "pegself")
 (peg-grammar::pegself)
 
+(compile-file "regression1.lisp")
 (load "regression1")
 (peg-grammar::pegself-self)
 
@@ -43,3 +44,5 @@ produces regression1.lisp and regression2.lisp
 diff them, if no errors, 
 
 (peg-grammar::overwrite-peg)
+(compile-file "peg.lisp")
+(load "peg")
