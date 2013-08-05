@@ -32,9 +32,6 @@ Grammar <- Spacing Definition+ Spacing EndOfFile {
   (:destructure (spc def spc2 eof)
    (declare (ignore spc eof spc2))
    `(progn
-      (defpackage :peg-grammar
-        (:use :cl :esrap :cl-heredoc))
-      (in-package :peg-grammar)
       ,@def)) }
 
 Definition <- Identifier LEFTARROW Expression spacing semanticCode? {

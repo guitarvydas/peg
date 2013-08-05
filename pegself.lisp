@@ -7,7 +7,7 @@
       (terpri f)
       (pprint '(IN-PACKAGE :PEG-GRAMMAR-R1) f)
       (terpri f)
-      (dolist (def (cdddr (parse 'grammar peg)))
+      (dolist (def (cdr (parse 'grammar peg)))
         (pprint def f)
         (terpri f)))))
 
@@ -18,7 +18,7 @@
       (terpri f)
       (pprint '(IN-PACKAGE :PEG-GRAMMAR-R1) f)
       (terpri f)
-      (dolist (def (cdddr (parse 'peg-grammar-r1::grammar peg)))
+      (dolist (def (cdr (parse 'peg-grammar-r1::grammar peg)))
         (pprint def f)
         (terpri f)))))
 
@@ -29,7 +29,7 @@
       (terpri f)
       (pprint '(IN-PACKAGE :PEG-GRAMMAR) f)
       (terpri f)
-      (dolist (def (cdddr (parse 'peg-grammar-r1::grammar peg)))
+      (dolist (def (cdr (parse 'peg-grammar-r1::grammar peg)))
         (pprint def f)
         (terpri f)))))
 
